@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../')  # noqa
 
 from ciri.fields import Boolean, Float, String, List, Schema as SubSchema, SelfReference
-from ciri.core import Schema
+from ciri.core import Schema, PolySchema
 from ciri.exception import ValidationError
 
 import pytest
@@ -112,12 +112,17 @@ def test_subrecursive_serialize_self():
         id = String(required=True)
         node = SelfReference()
 
-    class Root(Schema):
+    class Root(PolySchema):
         node = SubSchema(Node, allow_none=True)
-        enabled = Boolean(default=False)
+        enabled = Boolean(default=False, required=True)
+        test = String(required=True)
+        __poly_on__ = test
+
+    class SubRoot(Root):
+        __poly_id__ = 'sub'
 
     schema = Root()
-    assert schema.serialize({'node': {'id': '1', 'node': {'id': '2', 'node': None}}}) == Root(node=Node(id='1', node=Node(id='2', node=None))).serialize()
+    assert schema.serialize({'node': {'id': '1', 'node': {'id': '2', 'node': None}}, 'enabled': True, 'test': 'sub'}) == SubRoot(node=Node(id='1', node=Node(id='2', node=None)), enabled=True, test='sub').serialize()
 
 
 def test_subrecursive_deserialize_self():
