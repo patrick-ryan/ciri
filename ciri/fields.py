@@ -626,48 +626,69 @@ class Any(Field):
         if value is None and self._does_allow_none():
             return None
         valid = False
-        for field in self.fieldset:
+        error_messages = []
+        errors = {}
+        for i, field in enumerate(self.fieldset):
             field._schema = self._schema
+            schema_name = field.cached.__class__.__name__ if getattr(field, 'cached', None) else field
             try:
                 value = field.deserialize(value)
                 valid = True
                 break
-            except Exception:
-                continue
+            except FieldValidationError as e:
+                error_messages.append(f"{schema_name}: {e.error.message}")
+                errors.update(field._schema._raw_errors)
+            except ValidationError as e:
+                error_messages.append(f"{schema_name}: {e.message}")
+                errors.update(field._schema._raw_errors)
         if not valid:
-            raise SerializationError
+            raise FieldValidationError(FieldError(self, 'invalid', message=error_messages, errors=errors))
         return value
 
     def serialize(self, value):
         if value is None and self._does_allow_none():
             return None
         valid = False
-        for field in self.fieldset:
+        error_messages = []
+        errors = {}
+        for i, field in enumerate(self.fieldset):
             field._schema = self._schema
+            schema_name = field.cached.__class__.__name__ if getattr(field, 'cached', None) else field
             try:
                 value = field.serialize(value)
                 valid = True
                 break
-            except Exception:
-                continue
+            except FieldValidationError as e:
+                error_messages.append(f"{schema_name}: {e.error.message}")
+                errors.update(field._schema._raw_errors)
+            except ValidationError as e:
+                error_messages.append(f"{schema_name}: {e.message}")
+                errors.update(field._schema._raw_errors)
         if not valid:
-            raise SerializationError
+            raise FieldValidationError(FieldError(self, 'invalid', message=error_messages, errors=errors))
         return value
 
     def validate(self, value):
         if value is None and self._does_allow_none():
             return None
         valid = False
-        for field in self.fieldset:
+        error_messages = []
+        errors = {}
+        for i, field in enumerate(self.fieldset):
             field._schema = self._schema
+            schema_name = field.cached.__class__.__name__ if getattr(field, 'cached', None) else field
             try:
                 value = field.validate(value)
                 valid = True
                 break
-            except Exception:
-                continue
+            except FieldValidationError as e:
+                error_messages.append(f"{schema_name}: {e.error.message}")
+                errors.update(field._schema._raw_errors)
+            except ValidationError as e:
+                error_messages.append(f"{schema_name}: {e.message}")
+                errors.update(field._schema._raw_errors)
         if not valid:
-            raise FieldValidationError(FieldError(self, 'invalid'))
+            raise FieldValidationError(FieldError(self, 'invalid', message=error_messages, errors=errors))
         return value
 
 

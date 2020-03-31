@@ -1,14 +1,14 @@
 class SchemaException(Exception):
 
     def __init__(self, message=None):
-        self.message = message
+        self.message = message or self.__class__.__name__
 
 
 class ValidationError(Exception):
 
     def __init__(self, schema, message=None):
        self.schema = schema
-       self.message = message
+       self.message = message or self.__class__.__name__
 
     @property
     def errors(self):
@@ -22,7 +22,7 @@ class RegistryError(Exception):
 class InvalidSchemaException(SchemaException):
 
     def __init__(self, message='', errors=None, *args, **kwargs):
-        super(InvalidSchemaException, self).__init__(message, *args, **kwargs)
+        super(InvalidSchemaException, self).__init__(message or self.__class__.__name__, *args, **kwargs)
         if errors:
             self._errors = errors
 
